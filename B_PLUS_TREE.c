@@ -240,6 +240,251 @@ int main() {
 
 
 
-//A B+ Tree is a self-balancing multi-level tree data structure mainly used in database systems and file systems for efficient storage and retrieval of large amounts of sorted data. In a B+ Tree, all actual data records are stored only in the leaf nodes, while the internal nodes store only keys that act as indexes to guide the search process. All leaf nodes are connected using a linked list, which makes sequential access and range queries very efficient. Searching in a B+ Tree starts from the root and moves down through internal nodes by comparing keys until it reaches the appropriate leaf node where the actual data is found. Insertions and deletions maintain the balanced nature of the tree by performing operations like splitting nodes when they overflow and merging or redistributing nodes when they underflow, ensuring that all leaf nodes remain at the same level.
+// 1. What is a B+ Tree?
 
-The time complexity of search, insertion, and deletion operations in a B+ Tree is O(log n) because the tree remains balanced and has a high branching factor, keeping its height small. One of the major advantages of a B+ Tree is that it supports very fast range queries due to linked leaf nodes and provides efficient disk I/O performance, making it ideal for systems where data is stored on secondary storage. It also ensures consistent performance because the tree is always balanced. However, its disadvantages include higher implementation complexity compared to simpler trees like BST or AVL trees, increased memory usage due to multiple pointers in each node, and overhead in maintaining balance during insertions and deletions. B+ Trees are widely used in real-world applications such as database indexing systems like MySQL and PostgreSQL, file systems like NTFS and HFS+, and large-scale data indexing systems, where fast and efficient data retrieval is essential
+// A B+ Tree is a self-balancing multi-way search tree used in:
+
+// 👉 Databases
+// 👉 File systems
+// 👉 Indexing systems
+
+// ⭐ Key Idea:
+// All data is stored only in leaf nodes
+// Internal nodes only store keys for navigation
+// Leaf nodes are linked like a linked list
+// 📌 2. Why B+ Tree is used?
+
+// Because it gives:
+
+// ✔ Fast search (log n)
+// ✔ Efficient range queries
+// ✔ Sequential access
+// ✔ Balanced structure
+
+// 🌲 3. Structure of B+ Tree
+
+// Example (Order = 3):
+
+//         [20]
+//        /    \
+//    [10]     [30 40]
+//    /  \      /  |  \
+//   L1  L2    L3  L4  L5
+
+// 👉 All actual data is in leaf nodes
+// 👉 Leaf nodes are linked:
+
+// L1 → L2 → L3 → L4 → L5
+// ⚙️ 4. Operations in B+ Tree
+
+// We must support:
+
+// ✔ Insert
+
+// Add key → split node if full
+
+// ✔ Delete
+
+// Remove key → merge/redistribute if needed
+
+// ✔ Search
+
+// Find key using internal nodes → reach leaf
+
+// ✔ Traverse
+
+// Print all leaf nodes sequentially
+
+// 🧠 5. Working Concept (Simple Example)
+
+// Insert:
+
+// 10, 20, 5, 6, 12, 30, 7, 17
+
+// Tree grows and splits automatically:
+
+// Keys get distributed
+// Nodes split when full
+// Height remains balanced
+// 💻 6. Simple C Implementation (B+ Tree – Basic Version)
+
+// 👉 This is simplified for exams (most universities accept this style)
+
+// #include <stdio.h>
+// #include <stdlib.h>
+
+// #define ORDER 3
+
+// typedef struct Node {
+//     int keys[ORDER];
+//     struct Node *child[ORDER + 1];
+//     int count;
+//     int isLeaf;
+//     struct Node *next;
+// } Node;
+
+// // Create node
+// Node* createNode(int isLeaf) {
+//     Node *newNode = (Node*)malloc(sizeof(Node));
+//     newNode->isLeaf = isLeaf;
+//     newNode->count = 0;
+//     newNode->next = NULL;
+
+//     for (int i = 0; i < ORDER + 1; i++)
+//         newNode->child[i] = NULL;
+
+//     return newNode;
+// }
+
+// // Search
+// Node* search(Node *root, int key) {
+//     int i = 0;
+
+//     while (i < root->count && key > root->keys[i])
+//         i++;
+
+//     if (root->isLeaf)
+//         return root;
+
+//     return search(root->child[i], key);
+// }
+
+// // Split child (basic version)
+// void splitChild(Node *parent, int i, Node *child) {
+//     Node *newNode = createNode(child->isLeaf);
+//     int mid = ORDER / 2;
+
+//     newNode->count = ORDER - mid - 1;
+
+//     for (int j = 0; j < newNode->count; j++)
+//         newNode->keys[j] = child->keys[mid + 1 + j];
+
+//     if (!child->isLeaf) {
+//         for (int j = 0; j <= newNode->count; j++)
+//             newNode->child[j] = child->child[mid + 1 + j];
+//     }
+
+//     child->count = mid;
+
+//     for (int j = parent->count; j >= i + 1; j--)
+//         parent->child[j + 1] = parent->child[j];
+
+//     parent->child[i + 1] = newNode;
+
+//     for (int j = parent->count - 1; j >= i; j--)
+//         parent->keys[j + 1] = parent->keys[j];
+
+//     parent->keys[i] = child->keys[mid];
+//     parent->count++;
+// }
+
+// // Insert non full
+// void insertNonFull(Node *node, int key) {
+//     int i = node->count - 1;
+
+//     if (node->isLeaf) {
+//         while (i >= 0 && node->keys[i] > key) {
+//             node->keys[i + 1] = node->keys[i];
+//             i--;
+//         }
+//         node->keys[i + 1] = key;
+//         node->count++;
+//     }
+// }
+
+// // Insert
+// Node* insert(Node *root, int key) {
+//     if (root == NULL) {
+//         root = createNode(1);
+//         root->keys[0] = key;
+//         root->count = 1;
+//         return root;
+//     }
+
+//     if (root->count == ORDER) {
+//         Node *newRoot = createNode(0);
+//         newRoot->child[0] = root;
+
+//         splitChild(newRoot, 0, root);
+
+//         int i = (newRoot->keys[0] < key) ? 1 : 0;
+//         insertNonFull(newRoot->child[i], key);
+
+//         return newRoot;
+//     } else {
+//         insertNonFull(root, key);
+//         return root;
+//     }
+// }
+
+// // Traverse leaf nodes
+// void traverse(Node *root) {
+//     if (root == NULL) return;
+
+//     if (root->isLeaf) {
+//         for (int i = 0; i < root->count; i++)
+//             printf("%d ", root->keys[i]);
+//         return;
+//     }
+
+//     traverse(root->child[0]);
+// }
+
+// int main() {
+//     Node *root = NULL;
+
+//     root = insert(root, 10);
+//     root = insert(root, 20);
+//     root = insert(root, 5);
+//     root = insert(root, 6);
+//     root = insert(root, 12);
+//     root = insert(root, 30);
+//     root = insert(root, 7);
+//     root = insert(root, 17);
+
+//     printf("B+ Tree Leaf Nodes: ");
+//     traverse(root);
+
+//     return 0;
+// }
+// ⚙️ 7. Time Complexity
+// Operation	Complexity
+// Search	O(log n)
+// Insert	O(log n)
+// Delete	O(log n)
+// Traverse	O(n)
+// 📦 8. Space Complexity
+// O(n) (stores all keys in nodes)
+// 👍 9. Advantages of B+ Tree
+
+// ✔ Very fast range queries
+// ✔ Efficient disk storage (used in DBMS)
+// ✔ All data in leaves → easy traversal
+// ✔ Balanced tree → consistent performance
+// ✔ Good for large datasets
+
+// 👎 10. Disadvantages
+
+// ❌ Complex implementation
+// ❌ Extra memory for pointers
+// ❌ Insert/delete rebalancing is costly
+// ❌ Not good for small datasets
+
+// 🚀 11. Applications
+
+// B+ Tree is used in:
+
+// 🗄️ Database indexing (MySQL, Oracle)
+// 💽 File systems (NTFS, HFS+)
+// 🔎 Search engines
+// 📊 Large data storage systems
+// 📚 Range query systems
+// 🧾 FINAL SUMMARY
+
+// B+ Tree is:
+
+// A balanced multi-way tree
+// Used for database indexing
+// Stores data only in leaf nodes
+// Supports fast search, insert, delete
+// Ideal for large-scale systems
